@@ -1,7 +1,7 @@
 /*
-Á¦¸ñ: ºù°í °ÔÀÓ ¸¸µé±â
-¸¸µçÀÌ: ÀÌÇÑÁÖ
-¸¸µç ³¯Â¥: 2018-09-25
+ì œëª©: ë¹™ê³  ê²Œì„ ë§Œë“¤ê¸°
+ë§Œë“ ì´: ì´í•œì£¼
+ë§Œë“  ë‚ ì§œ: 2018-10-28
 */
 
 #include <iostream>
@@ -10,395 +10,414 @@
 
 using namespace std;
 
-enum AI_MODE {EASY = 1, HARD};	// AI ³­ÀÌµµ
+enum AI_MODE { EASY = 1, HARD };	// AI ë‚œì´ë„
 
-enum LINE// ºù°í ¶óÀÎ 12°³
+enum LINE// ë¹™ê³  ë¼ì¸ 12ê°œ
 {
-	LN_H1, LN_H2, LN_H3, LN_H4, LN_H5,	// °¡·Î ºù°í ¶óÀÎ
-	LN_V1, LN_V2, LN_V3, LN_V4, LN_V5,	// ¼¼·Î ºù°í ¶óÀÎ
-	LN_LT, LN_RT	// ´ë°¢¼± ºù°í ¶óÀÎ
+	LN_H1, LN_H2, LN_H3, LN_H4, LN_H5,	// ê°€ë¡œ ë¹™ê³  ë¼ì¸
+	LN_V1, LN_V2, LN_V3, LN_V4, LN_V5,	// ì„¸ë¡œ ë¹™ê³  ë¼ì¸
+	LN_LT, LN_RT	// ëŒ€ê°ì„  ë¹™ê³  ë¼ì¸
 };
 
-const int STAR = -1;	// * Ç¥½Ã¸¦ À§ÇÑ º¯¼ö STAR
+const int STAR = -1;	// * í‘œì‹œë¥¼ ìœ„í•œ ë³€ìˆ˜ STAR
+
+// í•¨ìˆ˜ ë¶„ë¦¬
+int SelectMode();
+void SetBingo(int bingo[]);
+void PrintBingo(int bingo[]);
+int SelectNumber(bool &userSelect, bool &finish, AI_MODE mode);
+bool CheckOverlap(int bingo[], int input);
+int CheckBingoV(int bingo[]);
+int CheckBingoH(int bingo[]);
+int CheckBingoLD(int bingo[]);
+int CheckBingoRD(int bingo[]);
+
+// ìœ ì €, AI ë¹™ê³ íŒ
+int iNumber[25];
+int AINumber[25];
 
 int main(void)
 {
-	// À¯Àú, AI ºù°íÆÇ
-	int iNumber[25];
-	int AINumber[25];
-
-	// À¯Àú, AI ºù°íÆÇ ÃÊ±âÈ­
+	// ìœ ì €, AI ë¹™ê³ íŒ ì´ˆê¸°í™”
 	for (int i = 0; i < 25; i++)
 		AINumber[i] = iNumber[i] = i + 1;
 
 	srand((unsigned)time(NULL));
 
-	// AI ³­ÀÌµµ ¼±ÅÃ
-	int mode;
-	while (true)
-	{
-		system("cls");
-		mode;
-		cout << "AI ³­ÀÌµµ ¼±ÅÃ(1:EASY, 2:HARD): ";
-		cin >> mode;
-		if (mode == 1 || mode == 2)
-			break;
-	}
-
-	// ºù°íÆÇÀÇ ¼ø¼­¸¦ ¼¯¾î ÁØ´Ù
-	int idx1, idx2, temp;
-	for (int i = 0; i < 100; i++)
-	{
-		// À¯ÀúÀÇ ºù°íÆÇ
-		idx1 = rand() % 25;
-		idx2 = rand() % 25;
-		temp = iNumber[idx1];
-		iNumber[idx1] = iNumber[idx2];
-		iNumber[idx2] = temp;
-
-		// AIÀÇ ºù°íÆÇ
-		idx1 = rand() % 25;
-		idx2 = rand() % 25;
-		temp = AINumber[idx1];
-		AINumber[idx1] = AINumber[idx2];
-		AINumber[idx2] = temp;
-	}
-
-	bool finish = false; //¹İº¹¹® Á¶°Ç
-
-	int bingoLine = 0, AIbingoLine = 0;	// user¿Í AIÀÇ ºù°í ¼ö
-
-	bool userSelect = true; // userÀÔ·Â ÆÇº°
+	// AI ë‚œì´ë„ ì„ íƒ
+	int mode = SelectMode();
 	
+	// ë¹™ê³ íŒ ì´ˆê¸°í™”
+	SetBingo(iNumber);
+	SetBingo(AINumber);
+	
+	bool finish = false; //ë°˜ë³µë¬¸ ì¡°ê±´
+	int bingoLine = 0, AIbingoLine = 0;	// userì™€ AIì˜ ë¹™ê³  ìˆ˜
+	bool userSelect = true; // userì…ë ¥ íŒë³„
+
 	while (!finish)
 	{
 		system("cls");
 
-		// À¯Àú ºù°í Ãâ·Â
+		// ìœ ì € ë¹™ê³  ì¶œë ¥
 		cout << "================User===============" << endl;
-		for (int i = 0; i < 25; i++)
-		{
-			if (iNumber[i] == STAR)
-				cout << '*' << '\t';
-			else
-				cout << iNumber[i] << '\t';
-
-			if ((i + 1) % 5 == 0)
-				cout << '\n';
-		}
-
+		PrintBingo(iNumber);
 		cout << "User Bingo Line: " << bingoLine << endl << endl;
 		if (bingoLine >= 5)
-
 		{
-			cout << "User ½Â¸®!" << endl;
+			cout << "User ìŠ¹ë¦¬!" << endl;
 			break;
 		}
 
-		// AI ºù°í Ãâ·Â
+		// AI ë¹™ê³  ì¶œë ¥
 		cout << "=================AI================" << endl;
-		for (int i = 0; i < 25; i++)
-		{
-			if (AINumber[i] == STAR)
-				cout << '*' << '\t';
-			else
-				cout << AINumber[i] << '\t';
-
-			if ((i + 1) % 5 == 0)
-				cout << '\n';
-		}
-
+		PrintBingo(AINumber);
 		cout << "AI Bingo Line: " << AIbingoLine << endl << endl;
 		if (AIbingoLine >= 5)
 		{
-			cout << "AI ½Â¸®!" << endl;
+			cout << "AI ìŠ¹ë¦¬!" << endl;
 			break;
 		}
-		
-		int input;	// ¼ıÀÚ ÀÔ·Â º¯¼ö
-		
-		if (userSelect) // user ¼±ÅÃ
+
+		int input = SelectNumber(userSelect, finish, (AI_MODE)mode);	// ìˆ«ì ì…ë ¥ ë³€ìˆ˜
+
+		// ì˜ˆì™¸ ì²˜ë¦¬
+		if (input < 1 || input > 25)
 		{
-			// ¼ıÀÚ ÀÔ·Â
-			cout << "¼ıÀÚ¸¦ ÀÔ·ÂÇÏ¼¼¿ä(0 Á¾·á)> ";
-			cin >> input;
-
-			// Á¾·áÁ¶°Ç
-			if (input == 0)
-				finish = true;
-
-			// ¿¹¿Ü Ã³¸®
-			if (input < 1 || input > 25)
-				continue;
-
-			// À¯Àú°¡ ÇÑ¹ø ¼±ÅÃ ÇÑ ÈÄ AI°¡ ¼±ÅÃ
-			userSelect = false;
+			userSelect = !userSelect;
+			continue;
 		}
-		else // AI ¼±ÅÃ
+
+		// ìœ ì € ì¤‘ë³µ ì²´í¬
+		bool bAcc = CheckOverlap(iNumber, input);
+		if (bAcc)
 		{
-			if (mode == EASY)	// ¼±ÅÃÇÏÁö ¾ÊÀº ¼ö¿¡¼­ ·£´ıÇÏ°Ô ¼±ÅÃ
-			{
-				int count = 0;
-				int arr[25];
-				for (int i = 0; i < 25; i++)
-				{
-					if (AINumber[i] != STAR)
-						arr[count++] = AINumber[i];
-				}
-				input = arr[rand() % count];
-			}
-				
-			if (mode == HARD)	// °¡Àå ºù°í °¡´É¼ºÀÌ ³ôÀº ¶óÀÎ¿¡¼­ ¼±ÅÃ
-			{
-				int count = 0;
-				int max_star = 0;	// 5°³ ÀÌÇÏÁß¿¡¼­ °¡Àå ¸¹Àº º°ÀÇ °³¼ö
-				int line = 0;		// max_starÀÇ ¶óÀÎ (enum LINE¿¡¼­ ¼±ÅÃ)
-
-				for (int i = 0; i < 5; i++)
-				{
-					count = 0;
-					for (int j = 0; j < 5; j++)
-					{
-						// °¡·Î ¶óÀÎ Ã¼Å©
-						if (AINumber[i * 5 + j] == STAR)
-						{
-							++count;
-						}
-
-						if (max_star <= count && count < 5)
-						{
-							line = i;
-							max_star = count;
-						}
-					}
-				}
-
-				for (int i = 0; i < 5; i++)
-				{
-					count = 0;
-					for (int j = 0; j < 5; j++)
-					{
-						// ¼¼·Î ¶óÀÎ Ã¼Å©
-						if (AINumber[i + j * 5] == STAR)
-						{
-							++count;
-						}
-
-						if (max_star < count && count < 5)
-						{
-							line = i + 5;
-							max_star = count;
-						}
-					}
-				}
-
-				// ¿ŞÂÊ -> ¿À¸¥ÂÊ ´ë°¢¼± Ã¼Å©
-				count = 0;
-				for (int i = 0; i < 25; i += 6)
-				{
-					if (AINumber[i] == STAR)
-					{
-						++count;
-					}
-				}
-				if (max_star < count && count < 5)
-				{
-					line = LN_LT;
-					max_star = count;
-				}
-
-				// ¿À¸¥ÂÊ -> ¿ŞÂÊ ´ë°¢¼± Ã¼Å©
-				count = 0;
-				for (int i = 4; i <= 20; i += 4)
-				{
-					if (AINumber[i] == STAR)
-					{
-						++count;
-					}
-				}
-				if (max_star < count && count < 5)
-				{
-					line = LN_RT;
-					max_star = count;
-				}
-
-				if (line <= LN_H5) // °¡·Î ÁÙÀÌ ÃÖ´ë ÀÏ °æ¿ì
-				{
-					for (int i = 0; i < 5; i++)
-					{
-						if (AINumber[line * 5 + i] != STAR)
-						{
-							input = AINumber[line * 5 + i];
-							break;
-						}
-					}
-				}
-				else if (line <= LN_V5) // ¼¼·Î ÁÙÀÌ ÃÖ´ëÀÏ °æ¿ì
-				{
-					for (int i = 0; i < 5; i++)
-					{
-						if (AINumber[(line - 5) + i * 5] != STAR)
-						{
-							input = AINumber[(line - 5) + 5 * i];
-							break;
-						}
-					}
-				}
-				else if (line == LN_LT) // ¿ŞÂÊ -> ¿À¸¥ÂÊ ´ë°¢¼±ÀÌ ÃÖ´ëÀÏ °æ¿ì
-				{
-					for (int i = 0; i < 25; i += 6)
-					{
-						if (AINumber[i] != STAR)
-						{
-							input = AINumber[i];
-							break;
-						}
-					}
-				}
-				else    // ¿À¸¥ÂÊ -> ¿ŞÂÊ ´ë°¢¼±ÀÌ ÃÖ´ëÀÏ °æ¿ì
-				{
-					for (int i = 4; i <= 20; i += 4)
-					{
-						if (AINumber[i] != STAR)
-						{
-							input = AINumber[i];
-							break;
-						}
-					}
-				}
-
-			}
-			
-			userSelect = true; // AI°¡ ¼±ÅÃ ÈÄ user°¡ ¼±ÅÃ
-			cout << "AI ¼±ÅÃ: " << input << endl;
+			cout << "User ì„ íƒ ì¤‘ë³µ, ì¬ ì„ íƒ" << endl;
+			userSelect = !userSelect;
 			Sleep(2000);
-		}
-			
-		// À¯Àú Áßº¹ Ã¼Å©
-		bool bAcc = true;
-		for (int i = 0; i < 25; i++)
-		{
-			if (input == iNumber[i])
-			{
-				// ¼ıÀÚ¸¦ Ã£À¸¸é Áßº¹ÀÌ ¾Æ´Ï¹Ç·Î
-				bAcc = false;
-				// *·Î ¹Ù²Ù±â À§ÇØ STAR·Î ÀúÀåÇÑ´Ù
-				iNumber[i] = STAR;
-				// ´õ ÀÌ»ó Ã£À» ÇÊ¿ä°¡ ¾øÀ¸¹Ç·Î break
-				break;
-			}
-		}
-
-		// AI Áßº¹ Ã¼Å©
-		bAcc = true;
-		for (int i = 0; i < 25; i++)
-		{
-			if (input == AINumber[i])
-			{
-				// ¼ıÀÚ¸¦ Ã£À¸¸é Áßº¹ÀÌ ¾Æ´Ï¹Ç·Î
-				bAcc = false;
-				// *·Î ¹Ù²Ù±â À§ÇØ STAR·Î ÀúÀåÇÑ´Ù
-				AINumber[i] = STAR;
-				// ´õ ÀÌ»ó Ã£À» ÇÊ¿ä°¡ ¾øÀ¸¹Ç·Î break
-				break;
-			}
-		}
-
-		// ºù°í Ã¼Å©
-		int star, AIstar;
-		bingoLine = 0, AIbingoLine = 0;
-		
-		// °¡·Î ºù°í Ã¼Å©
-		for (int i = 0; i < 5; i++)
-		{
-			// À¯Àú ºù°í Ã¼Å©
-			star = 0;
-			for (int j = 0; j < 5; j++)
-			{
-				if (iNumber[i * 5 + j] == STAR)
-					star++;
-			}
-
-			if (star == 5)
-				bingoLine++;
-
-			// AI ºù°í Ã¼Å©
-			AIstar = 0;
-			for (int j = 0; j < 5; j++)
-			{
-				if (AINumber[i * 5 + j] == STAR)
-					AIstar++;
-			}
-
-			if (AIstar == 5)
-				AIbingoLine++;
-		}
-
-		// ¼¼·Î ºù°í Ã¼Å©
-		for (int i = 0; i < 5; i++)
-		{
-			// À¯Àú ºù°í Ã¼Å©
-			star = 0;
-			for (int j = 0; j < 5; j++)
-			{
-				if (iNumber[i + j * 5] == STAR)
-					star++;
-			}
-
-			if (star == 5)
-				bingoLine++;
-
-			// AI ºù°í Ã¼Å©
-			AIstar = 0;
-			for (int j = 0; j < 5; j++)
-			{
-				if (AINumber[i + j * 5] == STAR)
-					AIstar++;
-			}
-
-			if (AIstar == 5)
-				AIbingoLine++;
-		}
-
-		// ´ë°¢¼±(ÁÂ»ó´Ü -> ¿ìÇÏ´Ü) ºù°í Ã¼Å©
-		star = 0, AIstar = 0;
-		for (int i = 0; i < 25; i+= 6)
-		{
-			// À¯Àú ºù°í Ã¼Å©
-			if (iNumber[i] == STAR)
-				star++;
-
-			if (star == 5)
-				bingoLine++;
-
-			// AI ºù°íÃ¼Å©
-			if (AINumber[i] == STAR)
-				AIstar++;
-
-			if (AIstar == 5)
-				AIbingoLine++;
-		}
-
-		// ´ë°¢¼±(¿ì»ó´Ü -> ÁÂÇÏ´Ü) ºù°í Ã¼Å©
-		star = 0, AIstar = 0;
-		for (int i = 4; i <= 20; i += 4)
-		{
-			// À¯Àú ºù°í Ã¼Å©
-			if (iNumber[i] == STAR)
-				star++;
-
-			if (star == 5)
-				bingoLine++;
-
-			// AI ºù°í Ã¼Å©
-			if (AINumber[i] == STAR)
-				AIstar++;
-
-			if (AIstar == 5)
-				AIbingoLine++;
+			continue;
 		}
 		
+		// AI ì¤‘ë³µ ì²´í¬
+		bAcc = CheckOverlap(AINumber, input);
+		if (bAcc)
+		{
+			cout << "AI ì„ íƒ ì¤‘ë³µ, ì¬ ì„ íƒ" << endl;
+			userSelect = !userSelect;
+			Sleep(2000);
+			continue;
+		}
+
+		// ë¹™ê³  ì²´í¬
+		bingoLine = CheckBingoV(iNumber) + CheckBingoH(iNumber) + CheckBingoLD(iNumber) + CheckBingoRD(iNumber);
+		AIbingoLine = CheckBingoV(AINumber) + CheckBingoH(AINumber) + CheckBingoLD(AINumber) + CheckBingoRD(AINumber);
 	}
 
 	return 0;
+}
+
+// ëª¨ë“œ ì„ íƒ
+int SelectMode()
+{
+	int mode;
+	while (true)
+	{
+		system("cls");
+		cout << "AI ë‚œì´ë„ ì„ íƒ(1:EASY, 2:HARD): ";
+		cin >> mode;
+		if (mode == 1 || mode == 2)
+			break;
+	}
+	return mode;
+}
+
+// ë¹™ê³ íŒ ì„¸íŒ…
+void SetBingo(int bingo[])
+{
+	// ë¹™ê³ íŒì˜ ìˆœì„œë¥¼ ì„ì–´ ì¤€ë‹¤
+	int idx1, idx2, temp;
+	for (int i = 0; i < 100; i++)
+	{
+		// ìœ ì €ì˜ ë¹™ê³ íŒ
+		idx1 = rand() % 25;
+		idx2 = rand() % 25;
+		temp = bingo[idx1];
+		bingo[idx1] = bingo[idx2];
+		bingo[idx2] = temp;
+	}
+}
+
+// ë¹™ê³ íŒ ì¶œë ¥
+void PrintBingo(int bingo[])
+{
+	for (int i = 0; i < 25; i++)
+	{
+		if (bingo[i] == STAR)
+			cout << '*' << '\t';
+		else
+			cout << bingo[i] << '\t';
+
+		if ((i + 1) % 5 == 0)
+			cout << '\n';
+	}
+}
+
+// ìˆ«ì ì„ íƒ í•¨ìˆ˜
+int SelectNumber(bool &userSelect, bool &finish, AI_MODE mode)
+{
+	int input;
+	if (userSelect) // user ì„ íƒ
+	{
+		// ìˆ«ì ì…ë ¥
+		cout << "ìˆ«ìë¥¼ ì…ë ¥í•˜ì„¸ìš”(0 ì¢…ë£Œ)> ";
+		cin >> input;
+
+		// ì¢…ë£Œì¡°ê±´
+		if (input == 0)
+			finish = true;
+		// ìœ ì €ê°€ í•œë²ˆ ì„ íƒ í•œ í›„ AIê°€ ì„ íƒ
+		userSelect = false;
+	}
+	else // AI ì„ íƒ
+	{
+		if (mode == EASY)	// ì„ íƒí•˜ì§€ ì•Šì€ ìˆ˜ì—ì„œ ëœë¤í•˜ê²Œ ì„ íƒ
+		{
+			int count = 0;
+			int arr[25];
+			for (int i = 0; i < 25; i++)
+			{
+				if (AINumber[i] != STAR)
+					arr[count++] = AINumber[i];
+			}
+			input = arr[rand() % count];
+		}
+
+		if (mode == HARD)	// ê°€ì¥ ë¹™ê³  ê°€ëŠ¥ì„±ì´ ë†’ì€ ë¼ì¸ì—ì„œ ì„ íƒ
+		{
+			int count = 0;
+			int max_star = 0;	// 5ê°œ ì´í•˜ì¤‘ì—ì„œ ê°€ì¥ ë§ì€ ë³„ì˜ ê°œìˆ˜
+			int line = 0;		// max_starì˜ ë¼ì¸ (enum LINEì—ì„œ ì„ íƒ)
+
+			for (int i = 0; i < 5; i++)
+			{
+				count = 0;
+				for (int j = 0; j < 5; j++)
+				{
+					// ê°€ë¡œ ë¼ì¸ ì²´í¬
+					if (AINumber[i * 5 + j] == STAR)
+					{
+						++count;
+					}
+				}
+
+				if (max_star <= count && count < 5)
+				{
+					line = i;
+					max_star = count;
+				}
+			}
+
+			for (int i = 0; i < 5; i++)
+			{
+				count = 0;
+				for (int j = 0; j < 5; j++)
+				{
+					// ì„¸ë¡œ ë¼ì¸ ì²´í¬
+					if (AINumber[i + j * 5] == STAR)
+					{
+						++count;
+					}
+				}
+
+				if (max_star < count && count < 5)
+				{
+					line = i + 5;
+					max_star = count;
+				}
+			}
+
+			// ì™¼ìª½ -> ì˜¤ë¥¸ìª½ ëŒ€ê°ì„  ì²´í¬
+			count = 0;
+			for (int i = 0; i < 25; i += 6)
+			{
+				if (AINumber[i] == STAR)
+				{
+					++count;
+				}
+			}
+			if (max_star < count && count < 5)
+			{
+				line = LN_LT;
+				max_star = count;
+			}
+
+			// ì˜¤ë¥¸ìª½ -> ì™¼ìª½ ëŒ€ê°ì„  ì²´í¬
+			count = 0;
+			for (int i = 4; i <= 20; i += 4)
+			{
+				if (AINumber[i] == STAR)
+				{
+					++count;
+				}
+			}
+			if (max_star < count && count < 5)
+			{
+				line = LN_RT;
+				max_star = count;
+			}
+
+			if (line <= LN_H5) // ê°€ë¡œ ì¤„ì´ ìµœëŒ€ ì¼ ê²½ìš°
+			{
+				for (int i = 0; i < 5; i++)
+				{
+					if (AINumber[line * 5 + i] != STAR)
+					{
+						input = AINumber[line * 5 + i];
+						break;
+					}
+				}
+			}
+			else if (line <= LN_V5) // ì„¸ë¡œ ì¤„ì´ ìµœëŒ€ì¼ ê²½ìš°
+			{
+				for (int i = 0; i < 5; i++)
+				{
+					if (AINumber[(line - 5) + i * 5] != STAR)
+					{
+						input = AINumber[(line - 5) + 5 * i];
+						break;
+					}
+				}
+			}
+			else if (line == LN_LT) // ì™¼ìª½ -> ì˜¤ë¥¸ìª½ ëŒ€ê°ì„ ì´ ìµœëŒ€ì¼ ê²½ìš°
+			{
+				for (int i = 0; i < 25; i += 6)
+				{
+					if (AINumber[i] != STAR)
+					{
+						input = AINumber[i];
+						break;
+					}
+				}
+			}
+			else    // ì˜¤ë¥¸ìª½ -> ì™¼ìª½ ëŒ€ê°ì„ ì´ ìµœëŒ€ì¼ ê²½ìš°
+			{
+				for (int i = 4; i <= 20; i += 4)
+				{
+					if (AINumber[i] != STAR)
+					{
+						input = AINumber[i];
+						break;
+					}
+				}
+			}
+
+		}
+
+		userSelect = true; // AIê°€ ì„ íƒ í›„ userê°€ ì„ íƒ
+		cout << "AI ì„ íƒ: " << input << endl;
+		Sleep(2000);
+	}
+	return input;
+}
+
+// ìˆ«ì ì¤‘ë³µ ì²´í¬
+bool CheckOverlap(int bingo[], int input)
+{
+	bool bAcc = true;
+	for (int i = 0; i < 25; i++)
+	{
+		if (input == bingo[i])
+		{
+			// ìˆ«ìë¥¼ ì°¾ìœ¼ë©´ ì¤‘ë³µì´ ì•„ë‹ˆë¯€ë¡œ
+			bAcc = false;
+			// *ë¡œ ë°”ê¾¸ê¸° ìœ„í•´ STARë¡œ ì €ì¥í•œë‹¤
+			bingo[i] = STAR;
+			// ë” ì´ìƒ ì°¾ì„ í•„ìš”ê°€ ì—†ìœ¼ë¯€ë¡œ break
+			break;
+		}
+	}
+	return bAcc;
+}
+
+// ê°€ë¡œ ì¤„ ë¹™ê³  ì²´í¬
+int CheckBingoH(int bingo[])
+{
+	// ë¹™ê³  ì²´í¬
+	int star;
+	int bingoLine = 0;
+
+	// ê°€ë¡œ ë¹™ê³  ì²´í¬
+	for (int i = 0; i < 5; i++)
+	{
+		// ìœ ì € ë¹™ê³  ì²´í¬
+		star = 0;
+		for (int j = 0; j < 5; j++)
+		{
+			if (bingo[i * 5 + j] == STAR)
+				star++;
+		}
+
+		if (star == 5)
+			bingoLine++;
+	}
+	return bingoLine;
+}
+
+// ì„¸ë¡œ ë¹™ê³  ì¤„ ì²´í¬
+int CheckBingoV(int bingo[])
+{
+	// ë¹™ê³  ì²´í¬
+	int star;
+	int bingoLine = 0;
+
+	// ì„¸ë¡œ ë¹™ê³  ì²´í¬
+	for (int i = 0; i < 5; i++)
+	{
+		// ìœ ì € ë¹™ê³  ì²´í¬
+		star = 0;
+		for (int j = 0; j < 5; j++)
+		{
+			if (bingo[i + j * 5] == STAR)
+				star++;
+		}
+
+		if (star == 5)
+			bingoLine++;
+	}
+
+	return bingoLine;
+}
+
+// ì¢Œ ëŒ€ê°ì„  ë¹™ê³  ì²´í¬
+int CheckBingoLD(int bingo[])
+{
+	// ëŒ€ê°ì„ (ì¢Œìƒë‹¨ -> ìš°í•˜ë‹¨) ë¹™ê³  ì²´í¬
+	int star = 0, bingoLine = 0;
+	for (int i = 0; i < 25; i += 6)
+	{
+		// ìœ ì € ë¹™ê³  ì²´í¬
+		if (bingo[i] == STAR)
+			star++;
+
+		if (star == 5)
+			bingoLine++;
+	}
+	return bingoLine;
+}
+
+// ìš° ëŒ€ê°ì„  ë¹™ê³  ì²´í¬
+int CheckBingoRD(int bingo[])
+{
+	// ëŒ€ê°ì„ (ìš°ìƒë‹¨ -> ì¢Œí•˜ë‹¨) ë¹™ê³  ì²´í¬
+	int star = 0, bingoLine = 0;
+	for (int i = 4; i <= 20; i += 4)
+	{
+		// ìœ ì € ë¹™ê³  ì²´í¬
+		if (bingo[i] == STAR)
+			star++;
+
+		if (star == 5)
+			bingoLine++;
+	}
+	return bingoLine;
 }
